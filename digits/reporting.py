@@ -30,7 +30,10 @@ def evaluate(args):
     model, checkpoint = load_checkpoint(args.checkpoint)
     model = inference_model(model)
     images, labels = split_tensors(checkpoint, args.split)
-    logits = model((images - checkpoint["mean"]) / checkpoint["std"])
+    logits = torch.cat([
+        model((batch - checkpoint["mean"]) / checkpoint["std"])
+        for batch in images.split(args.batch_size)
+    ])
     predicted = logits.argmax(dim=1).numpy()
     actual = labels.numpy()
     classes = np.arange(10)

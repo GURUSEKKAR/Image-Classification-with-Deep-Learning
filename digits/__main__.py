@@ -29,6 +29,7 @@ def main():
 
     score = commands.add_parser("evaluate", help="report accuracy and class-level metrics")
     score.add_argument("--split", choices=("validation", "test"), default="test")
+    score.add_argument("--batch-size", type=positive_int, default=64)
     score.set_defaults(module="reporting")
     perf = commands.add_parser("benchmark", help="measure training throughput and prediction latency")
     perf.add_argument("--repeats", type=positive_int, default=200)
