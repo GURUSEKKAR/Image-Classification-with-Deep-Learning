@@ -30,6 +30,25 @@ function dense(input, layer) {
     return value;
   });
 }
+export function validateModel(model) {
+  const shapes = [[216,24], [10368,48], [12288,64], [640,10]];
+  if (!Number.isFinite(model?.mean) || !Number.isFinite(model.std) || model.std <= 0 ||
+      !Array.isArray(model.layers) || model.layers.length !== shapes.length)
+    throw Error('Invalid digit model metadata.');
+  for (const [index, [weights, biases]] of shapes.entries()) {
+    const layer = model.layers[index];
+    if (!Array.isArray(layer?.w) || layer.w.length !== weights || !layer.w.every(Number.isFinite) ||
+        !Array.isArray(layer.b) || layer.b.length !== biases || !layer.b.every(Number.isFinite))
+      throw Error('Invalid digit model weights.');
+  }
+  for (let i=0; i<10; i++) {
+    const pixels = model.samples?.[i];
+    if (!Array.isArray(pixels) || pixels.length !== 64 ||
+        !pixels.every(x => Number.isFinite(x) && x >= 0 && x <= 1))
+      throw Error('Invalid digit model sample.');
+  }
+}
+
 export function probabilities(pixels, model) {
   const [conv1, conv2, fc1, fc2] = model.layers;
   const input = Float32Array.from(pixels, x => (x - model.mean) / model.std);

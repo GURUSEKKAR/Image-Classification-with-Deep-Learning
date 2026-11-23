@@ -1,4 +1,4 @@
-import {probabilities} from './model.mjs';
+import {probabilities, validateModel} from './model.mjs';
 import {prepareUpload} from './upload.mjs';
 const $ = id => document.getElementById(id);
 const pad = $('pad'), ctx = pad.getContext('2d', {willReadFrequently:true});
@@ -120,7 +120,9 @@ $('file').onchange = async event => {
 };
 try {
   const response=await fetch('./model.json');if(!response.ok)throw Error();
-  model=await response.json();
+  const payload = await response.json();
+  validateModel(payload);
+  model = payload;
   for(const key of Object.keys(model.samples)){
     const button=document.createElement('button');button.textContent=key;
     const thumb = document.createElement('canvas');
