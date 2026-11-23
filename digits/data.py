@@ -56,7 +56,7 @@ def has_dark_ink(rgba):
     return bool(np.median(border[border_alpha >= 128]) >= 128)
 
 
-def image_tensor(path: Path, dark_ink: bool = False, *, auto_ink=False):
+def image_tensor(path: Path, dark_ink: bool = False, *, auto_ink=False, trim=False):
     """Fit one cropped digit inside an 8×8 square, preserving its aspect ratio."""
     with Image.open(path) as source:
         rgba = ImageOps.exif_transpose(source).convert("RGBA")
@@ -66,6 +66,12 @@ def image_tensor(path: Path, dark_ink: bool = False, *, auto_ink=False):
         gray = Image.alpha_composite(Image.new("RGBA", rgba.size, background), rgba).convert("L")
     if dark_ink:
         gray = ImageOps.invert(gray)
+    if trim:
+        low, high = gray.getextrema()
+        threshold = low + 0.12 * (high - low)
+        bounds = gray.point(lambda pixel: 255 if pixel > threshold else 0).getbbox()
+        if bounds:
+            gray = gray.crop(bounds)
     tile = ImageOps.pad(gray, (8, 8), method=Image.Resampling.LANCZOS, color=0)
     pixels = np.asarray(tile, dtype=np.float32) / 255.0
     return torch.from_numpy(pixels)[None, None]
