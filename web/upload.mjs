@@ -13,7 +13,15 @@ export function prepareUpload(data, width, height, color) {
   const perimeter = width * height - Math.max(0, width-2) * Math.max(0, height-2);
   const transparent = border.length < perimeter / 2;
   const background = transparent ? 0 : median(border);
-  const dark = transparent ? median(visible) < 128 : background >= 128;
+  let darkEnergy = 0, lightEnergy = 0;
+  if (!transparent) {
+    for (const value of visible) {
+      const delta = value - background;
+      if (delta < 0) darkEnergy += delta * delta;
+      else lightEnergy += delta * delta;
+    }
+  }
+  const dark = transparent ? median(visible) < 128 : darkEnergy > lightEnergy;
   let low = 255, high = 0;
   for (let i = 0; i < data.length; i += 4) {
     const contrast = transparent ? (dark ? 255-data[i] : data[i])
