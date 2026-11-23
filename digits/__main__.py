@@ -7,7 +7,7 @@ import torch
 
 from .data import image_tensor
 from .model import inference_model, load_checkpoint
-from .reporting import benchmark, evaluate
+from .reporting import benchmark, evaluate, report
 from .training import train
 
 
@@ -25,6 +25,7 @@ def positive_int(value):
 def predict(args):
     model, checkpoint = load_checkpoint(args.checkpoint)
     model = inference_model(model)
+    predictions = []
     for start in range(0, len(args.images), 64):
         paths = args.images[start : start + 64]
         images = torch.cat([
@@ -34,11 +35,19 @@ def predict(args):
         logits = model((images - checkpoint["mean"]) / checkpoint["std"])
         values, classes = logits.softmax(dim=1).topk(args.top_k)
         for path, digits, scores in zip(paths, classes.tolist(), values.tolist()):
+            if args.json:
+                predictions.append({
+                    "image": str(path), "digit": digits[0],
+                    "scores": [{"digit": d, "probability": s} for d, s in zip(digits, scores)],
+                })
+                continue
             if len(args.images) > 1:
                 print(path)
             print(f"Predicted digit {digits[0]}")
             for digit, score in zip(digits, scores):
                 print(f"  {digit}   {score:.2%}")
+    if args.json:
+        report({"predictions": predictions}, args.json)
 
 
 def main():
@@ -70,7 +79,7 @@ def main():
 
     for command in (score, perf, infer):
         command.add_argument("--checkpoint", type=Path, default=CHECKPOINT)
-    for command in (score, perf):
+    for command in (score, perf, infer):
         command.add_argument("--json", type=Path, help="write the report to this file")
     for command in (fit, score, perf, infer):
         command.add_argument("--threads", type=positive_int, default=1, help="CPU threads (default 1)")
