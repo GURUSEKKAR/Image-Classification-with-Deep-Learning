@@ -32,6 +32,19 @@ def split_indices(labels, seed):
     return {name: rng.permutation(indices).tolist() for name, indices in parts.items()}
 
 
+def validate_splits(parts, size):
+    expected = {"train", "validation", "test"}
+    if not isinstance(parts, dict) or set(parts) != expected:
+        raise ValueError("Checkpoint must contain train, validation and test partitions.")
+    all_indices = []
+    for name, indices in parts.items():
+        if not isinstance(indices, list) or not indices or any(type(i) is not int for i in indices):
+            raise ValueError(f"Invalid indices in the {name} partition.")
+        all_indices.extend(indices)
+    if sorted(all_indices) != list(range(size)):
+        raise ValueError("Saved partitions must cover every dataset image exactly once.")
+
+
 def image_tensor(path: Path, dark_ink: bool):
     """Fit one cropped digit inside an 8×8 square, preserving its aspect ratio."""
     with Image.open(path) as source:

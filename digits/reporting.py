@@ -10,7 +10,7 @@ import torch
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from torch.nn import functional as F
 
-from .data import dataset
+from .data import dataset, validate_splits
 from .model import inference_model, load_checkpoint
 from .training import train_step
 
@@ -19,6 +19,7 @@ def split_tensors(checkpoint, split):
     images, labels, fingerprint = dataset()
     if fingerprint != checkpoint["dataset_sha256"]:
         raise ValueError("Dataset contents differ from the training checkpoint.")
+    validate_splits(checkpoint["split_indices"], len(labels))
     indices = checkpoint["split_indices"][split]
     return torch.from_numpy(images[indices]), torch.from_numpy(labels[indices])
 
