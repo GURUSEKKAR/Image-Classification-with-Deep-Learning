@@ -81,7 +81,7 @@ pad.onpointerdown = event => {
 pad.onpointermove = event => {
   if(drawing && event.isPrimary){ctx.lineTo(...point(event));ctx.stroke();}
 };
-pad.onpointerup = pad.onpointercancel = event => {
+pad.onpointerup = pad.onpointercancel = pad.onlostpointercapture = event => {
   if(drawing && event.isPrimary){drawing=false;analyze('Drawing analyzed');}
 };
 $('clear').onclick = () => {
