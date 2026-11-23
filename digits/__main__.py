@@ -32,7 +32,7 @@ def predict(args):
             for path in paths
         ])
         logits = model((images - checkpoint["mean"]) / checkpoint["std"])
-        values, classes = logits.softmax(dim=1).topk(3)
+        values, classes = logits.softmax(dim=1).topk(args.top_k)
         for path, digits, scores in zip(paths, classes.tolist(), values.tolist()):
             if len(args.images) > 1:
                 print(path)
@@ -60,6 +60,8 @@ def main():
     perf.set_defaults(run=benchmark)
     infer = commands.add_parser("predict", help="classify an image file")
     infer.add_argument("images", type=Path, nargs="+", metavar="IMAGE")
+    infer.add_argument("--top-k", type=int, choices=range(1, 11), default=3, metavar="1..10",
+                       help="number of ranked scores per image (default 3)")
     ink = infer.add_mutually_exclusive_group()
     ink.add_argument("--dark-ink", action="store_true", help="use for dark strokes on light paper")
     ink.add_argument("--auto-ink", action="store_true", help="infer polarity from the background")
