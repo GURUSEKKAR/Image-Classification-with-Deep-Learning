@@ -45,7 +45,22 @@ def train(args):
     history = []
     best_loss = float("inf")
     best_epoch = 0
-    best_weights = None
+    checkpoint = {
+        "format_version": CHECKPOINT_VERSION,
+        "mean": mean,
+        "std": std,
+        "split_indices": splits,
+        "dataset_sha256": fingerprint,
+        "history": history,
+        "config": {
+            "seed": args.seed, "epochs": args.epochs, "patience": args.patience,
+            "batch_size": args.batch_size, "threads": torch.get_num_threads(),
+        },
+        "environment": {
+            "python": platform.python_version(), "platform": platform.platform(),
+            **{name: version(name) for name in ("torch", "numpy", "scikit-learn", "Pillow")},
+        },
+    }
     for epoch in range(1, args.epochs + 1):
         model.train()
         total_loss = 0.0
@@ -67,19 +82,13 @@ def train(args):
         print(f"Epoch {epoch:3d}  train loss {total_loss / len(train_x):.4f}  "
               f"validation loss {val_loss:.4f}  validation accuracy {accuracy:.2%}", flush=True)
         if val_loss < best_loss:
-            best_epoch, best_loss, best_weights = epoch, val_loss, deepcopy(model.state_dict())
+            best_epoch, best_loss = epoch, val_loss
+            checkpoint["best_epoch"] = epoch
+            checkpoint["weights"] = deepcopy(model.state_dict())
+            save_checkpoint(checkpoint, args.output)
         schedule.step(val_loss)
         if epoch - best_epoch >= args.patience:
             break
 
-    checkpoint = {
-        "format_version": CHECKPOINT_VERSION,
-        "weights": best_weights, "mean": mean, "std": std, "split_indices": splits,
-        "dataset_sha256": fingerprint, "best_epoch": best_epoch, "history": history,
-        "config": {"seed": args.seed, "epochs": args.epochs, "patience": args.patience,
-                   "batch_size": args.batch_size, "threads": torch.get_num_threads()},
-        "environment": {"python": platform.python_version(), "platform": platform.platform(),
-                        **{name: version(name) for name in ("torch", "numpy", "scikit-learn", "Pillow")}},
-    }
     save_checkpoint(checkpoint, args.output)
     print(f"Saved epoch {best_epoch} to {args.output} after {epoch} epochs.")
