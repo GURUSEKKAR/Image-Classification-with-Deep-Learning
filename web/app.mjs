@@ -129,4 +129,6 @@ try {
     $('samples').append(button);
   }
   showSample('6');
+  $('clear').disabled = false;
+  $('file').disabled = false;
 } catch {resetResult('Model unavailable. Reload the page to try again.');}

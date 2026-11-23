@@ -50,6 +50,7 @@ h3 { font-size: 1rem; margin: 23px 0 10px; }
 .row:first-child .fill { background: var(--blue); }
 details { border-top: 1px solid var(--line); margin-top: 18px; padding-top: 12px; font-size: .92rem; }
 summary { cursor: pointer; }
+.upload:has(input:disabled), #clear:disabled { opacity: .55; cursor: wait; }
 details p { line-height: 1.5; color: var(--muted); margin-top: 8px; }
 .samples { margin: 32px 0; }
 #samples { display: grid; grid-template-columns: repeat(10,1fr); gap: 7px; margin-top: 13px; }
