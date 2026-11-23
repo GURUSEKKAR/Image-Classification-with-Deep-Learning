@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .data import dataset, validate_splits
 from .model import inference_model, load_checkpoint
+from .io import atomic_output
 
 
 def main():
@@ -27,7 +28,8 @@ def main():
     payload = {"layers": [{"w": layer.weight.flatten().tolist(), "b": layer.bias.tolist()}
                           for layer in layers],
                "mean": checkpoint["mean"], "std": checkpoint["std"], "samples": samples}
-    args.output.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+    with atomic_output(args.output) as pending:
+        pending.write_text(json.dumps(payload, separators=(",", ":"), allow_nan=False), encoding="utf-8")
 
 
 if __name__ == "__main__":
