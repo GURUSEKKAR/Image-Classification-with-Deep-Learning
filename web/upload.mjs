@@ -4,8 +4,8 @@ export function prepareUpload(data, width, height, color) {
   for (let i = 0; i < data.length; i += 4) {
     const value = Math.round(.299 * data[i] + .587 * data[i+1] + .114 * data[i+2]);
     data[i] = value;
+    if (data[i+3] > 0) visible.push(value);
     if (data[i+3] < 128) continue;
-    visible.push(value);
     const x = (i / 4) % width, y = Math.floor(i / 4 / width);
     if (!x || !y || x === width-1 || y === height-1) border.push(value);
   }
