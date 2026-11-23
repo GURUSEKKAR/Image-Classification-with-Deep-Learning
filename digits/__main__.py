@@ -84,6 +84,11 @@ def main():
     for command in (fit, score, perf, infer):
         command.add_argument("--threads", type=positive_int, default=1, help="CPU threads (default 1)")
     args = parser.parse_args()
+    output = getattr(args, "json", None)
+    if output:
+        inputs = [args.checkpoint, *getattr(args, "images", [])]
+        if any(path.resolve() == output.resolve() for path in inputs):
+            parser.error("the JSON destination must be different from each input file")
     if args.command == "train" and not 0 <= args.seed < 2**63:
         parser.error("--seed must be between 0 and 2^63 - 1")
     torch.set_num_threads(args.threads)
