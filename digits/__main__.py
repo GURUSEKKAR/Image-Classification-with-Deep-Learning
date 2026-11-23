@@ -33,6 +33,7 @@ def main():
     score.set_defaults(module="reporting")
     perf = commands.add_parser("benchmark", help="measure training throughput and prediction latency")
     perf.add_argument("--repeats", type=positive_int, default=200)
+    perf.add_argument("--warmup", type=positive_int, default=10)
     perf.set_defaults(module="reporting")
     infer = commands.add_parser("predict", help="classify an image file")
     infer.add_argument("images", type=Path, nargs="+", metavar="IMAGE")

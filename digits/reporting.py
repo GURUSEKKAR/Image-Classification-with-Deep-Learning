@@ -74,10 +74,10 @@ def training_rate(model, images, labels, checkpoint, batch_size, repeats, warmup
     learning_rate = checkpoint["config"].get("learning_rate", 0.002)
     optimizer = torch.optim.AdamW(working.parameters(), lr=learning_rate, weight_decay=0.01)
     for step in range(warmup + repeats):
-        start = (step * batch_size) % len(images)
-        indices = torch.arange(start, start + batch_size) % len(images)
         if step == warmup:
             clock = perf_counter()
+        start = (step * batch_size) % len(images)
+        indices = torch.arange(start, start + batch_size) % len(images)
         train_step(working, optimizer, images[indices], labels[indices],
                    checkpoint["mean"], checkpoint["std"])
     return repeats * batch_size / (perf_counter() - clock)
@@ -89,7 +89,7 @@ def benchmark(args):
     tile = (images[:1] - checkpoint["mean"]) / checkpoint["std"]
     fused = inference_model(model)
     latency = {"original": [], "fused": []}
-    warmup = 10
+    warmup = args.warmup
     with torch.inference_mode():
         check = (images[:64] - checkpoint["mean"]) / checkpoint["std"]
         original_scores = model(check).softmax(1)
@@ -106,7 +106,7 @@ def benchmark(args):
                 if step >= warmup:
                     latency[name].append(elapsed_ms)
             variants.reverse()
-    batch_sizes = sorted({1, checkpoint["config"]["batch_size"]})
+    batch_sizes = sorted({1, min(len(images), checkpoint["config"]["batch_size"])})
     throughput = {
         str(size): training_rate(model, images, labels, checkpoint, size, args.repeats, warmup)
         for size in batch_sizes
