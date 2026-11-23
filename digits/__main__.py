@@ -24,12 +24,21 @@ def positive_int(value):
 @torch.inference_mode()
 def predict(args):
     model, checkpoint = load_checkpoint(args.checkpoint)
-    image = image_tensor(args.image, args.dark_ink, auto_ink=args.auto_ink, trim=args.trim)
-    logits = inference_model(model)((image - checkpoint["mean"]) / checkpoint["std"])
-    values, classes = logits[0].softmax(dim=0).topk(3)
-    print(f"Predicted digit {classes[0].item()}")
-    for digit, score in zip(classes.tolist(), values.tolist()):
-        print(f"  {digit}   {score:.2%}")
+    model = inference_model(model)
+    for start in range(0, len(args.images), 64):
+        paths = args.images[start : start + 64]
+        images = torch.cat([
+            image_tensor(path, args.dark_ink, auto_ink=args.auto_ink, trim=args.trim)
+            for path in paths
+        ])
+        logits = model((images - checkpoint["mean"]) / checkpoint["std"])
+        values, classes = logits.softmax(dim=1).topk(3)
+        for path, digits, scores in zip(paths, classes.tolist(), values.tolist()):
+            if len(args.images) > 1:
+                print(path)
+            print(f"Predicted digit {digits[0]}")
+            for digit, score in zip(digits, scores):
+                print(f"  {digit}   {score:.2%}")
 
 
 def main():
@@ -50,7 +59,7 @@ def main():
     perf.add_argument("--repeats", type=positive_int, default=200)
     perf.set_defaults(run=benchmark)
     infer = commands.add_parser("predict", help="classify an image file")
-    infer.add_argument("image", type=Path)
+    infer.add_argument("images", type=Path, nargs="+", metavar="IMAGE")
     ink = infer.add_mutually_exclusive_group()
     ink.add_argument("--dark-ink", action="store_true", help="use for dark strokes on light paper")
     ink.add_argument("--auto-ink", action="store_true", help="infer polarity from the background")
