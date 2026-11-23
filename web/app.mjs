@@ -29,7 +29,7 @@ function score(pixels, message) {
   renderPixels($('input-preview'), pixels, true);
   const ranks = probabilities(pixels, model).map((p,d) => ({p,d})).sort((a,b) => b.p-a.p);
   $('digit').textContent = ranks[0].d;
-  $('status').textContent = message;
+  $('status').textContent = message + '. Predicted digit ' + ranks[0].d + '.';
   $('ranks').replaceChildren();
   for (const {p,d} of ranks.slice(0,3)) {
     const row = document.createElement('div'), label = document.createElement('span');
