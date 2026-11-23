@@ -3,7 +3,7 @@ import {prepareUpload} from './upload.mjs';
 const $ = id => document.getElementById(id);
 const pad = $('pad'), ctx = pad.getContext('2d', {willReadFrequently:true});
 const side = pad.width;
-let model, drawing = false, replace = true, revision = 0;
+let model, activePointer = null, replace = true, revision = 0;
 const inkColor = [37, 66, 143];
 function renderPixels(canvas, pixels, grayscale = false) {
   const context = canvas.getContext('2d');
@@ -42,7 +42,7 @@ function score(pixels, message) {
   }
 }
 function showSample(key) {
-  ++revision; drawing = false; replace = true; selectSample(key);
+  ++revision; activePointer = null; replace = true; selectSample(key);
   ctx.clearRect(0,0,side,side);
   model.samples[key].forEach((v,i) => {
     ctx.fillStyle = `rgba(${inkColor},${v})`;
@@ -71,15 +71,15 @@ function point(event) {
   return [(event.clientX-box.left)*side/box.width,(event.clientY-box.top)*side/box.height];
 }
 pad.onpointerdown = event => {
-  if(!model || !event.isPrimary || event.button!==0) return;
+  if(!model || activePointer !== null || !event.isPrimary || event.button!==0) return;
   ++revision; selectSample(''); if(replace) ctx.clearRect(0,0,side,side);
-  replace=false;drawing=true;pad.setPointerCapture(event.pointerId);
+  replace=false;activePointer=event.pointerId;pad.setPointerCapture(event.pointerId);
   resetResult('Drawing…');
   ctx.strokeStyle=`rgb(${inkColor})`;ctx.lineWidth=22;ctx.lineCap='round';ctx.lineJoin='round';
   const [x,y]=point(event);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.01,y);ctx.stroke();
 };
 pad.onpointermove = event => {
-  if(drawing && event.isPrimary){
+  if(event.pointerId === activePointer){
     const [x,y] = point(event);
     ctx.lineTo(x,y);
     ctx.stroke();
@@ -88,16 +88,16 @@ pad.onpointermove = event => {
   }
 };
 pad.onpointerup = pad.onpointercancel = pad.onlostpointercapture = event => {
-  if(drawing && event.isPrimary){drawing=false;analyze('Drawing analyzed');}
+  if(event.pointerId === activePointer){activePointer=null;analyze('Drawing analyzed');}
 };
 $('clear').onclick = () => {
-  ++revision;drawing=false;replace=false;ctx.clearRect(0,0,side,side);selectSample('');
+  ++revision;activePointer=null;replace=false;ctx.clearRect(0,0,side,side);selectSample('');
   resetResult('Waiting for a digit');
 };
 $('file').onchange = async event => {
   const file=event.target.files[0];event.target.value='';if(!file || !model)return;
   const ticket=++revision;
-  drawing=false;
+  activePointer=null;
   let url;
   try {
     if(file.size>10*1024*1024) throw Error('Choose an image smaller than 10 MB.');
