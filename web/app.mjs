@@ -112,7 +112,10 @@ $('file').onchange = async event => {
     t.putImageData(bitmap,0,0);ctx.clearRect(0,0,side,side);
     ctx.drawImage(temp,(side-temp.width)/2,(side-temp.height)/2);
     replace=true;selectSample('');analyze('Uploaded image analyzed');
-  } catch(error){if(ticket===revision)resetResult(error.name==='EncodingError'?'Choose a readable image file.':error.message);}
+  } catch(error){
+    if(ticket===revision) $('status').textContent =
+      error.name==='EncodingError' ? 'Choose a readable image file.' : error.message;
+  }
   finally{if(url)URL.revokeObjectURL(url);}
 };
 try {
