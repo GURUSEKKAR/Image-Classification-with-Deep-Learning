@@ -11,6 +11,7 @@ from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from torch.nn import functional as F
 
 from .data import dataset, validate_splits
+from .io import atomic_output
 from .model import inference_model, load_checkpoint
 from .training import train_step
 
@@ -27,8 +28,8 @@ def split_tensors(checkpoint, split):
 def report(result, path):
     output = json.dumps(result, indent=2, allow_nan=False)
     if path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(output + "\n", encoding="utf-8")
+        with atomic_output(path) as pending:
+            pending.write_text(output + "\n", encoding="utf-8")
         print(f"Wrote {path}")
     else:
         print(output)

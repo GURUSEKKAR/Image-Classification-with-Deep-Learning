@@ -1,17 +1,16 @@
 """Fit the CNN and keep the weights with the lowest validation loss."""
 
-import os
 import platform
 from copy import deepcopy
 from importlib.metadata import version
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from time import perf_counter
 
 import torch
 from torch.nn import functional as F
 
 from .data import augment, dataset, split_indices
+from .io import atomic_output
 from .model import CHECKPOINT_VERSION, DigitCNN
 
 
@@ -25,14 +24,8 @@ def train_step(model, optimizer, images, labels, mean, std):
 
 
 def save_checkpoint(checkpoint, path: Path):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with NamedTemporaryFile(dir=path.parent, delete=False) as temp:
-        name = temp.name
-    try:
-        torch.save(checkpoint, name)
-        os.replace(name, path)
-    finally:
-        Path(name).unlink(missing_ok=True)
+    with atomic_output(path) as pending:
+        torch.save(checkpoint, pending)
 
 
 def train(args):
