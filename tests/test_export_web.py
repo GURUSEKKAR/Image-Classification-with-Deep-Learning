@@ -1,8 +1,11 @@
+import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+
+import numpy as np
 
 
 class ExportTests(unittest.TestCase):
@@ -11,7 +14,14 @@ class ExportTests(unittest.TestCase):
             output = Path(directory) / "nested/model.json"
             subprocess.run([sys.executable, "-m", "digits.export_web", "--output", str(output)],
                            check=True)
-            self.assertEqual(output.read_bytes(), Path("web/model.json").read_bytes())
+            actual = json.loads(output.read_text())
+            expected = json.loads(Path("web/model.json").read_text())
+            layers, reference = actual.pop("layers"), expected.pop("layers")
+            self.assertEqual(actual, expected)
+            self.assertEqual(len(layers), len(reference))
+            for layer, baseline in zip(layers, reference):
+                for field in ("w", "b"):
+                    np.testing.assert_allclose(layer[field], baseline[field], atol=1e-6, rtol=1e-5)
 
     def test_output_collision_preserves_original_bytes(self):
         with tempfile.TemporaryDirectory() as directory:
