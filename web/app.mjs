@@ -42,7 +42,7 @@ function score(pixels, message) {
   }
 }
 function showSample(key) {
-  ++revision; replace = true; selectSample(key);
+  ++revision; drawing = false; replace = true; selectSample(key);
   ctx.clearRect(0,0,side,side);
   model.samples[key].forEach((v,i) => {
     ctx.fillStyle = `rgba(${inkColor},${v})`;
@@ -91,6 +91,7 @@ $('clear').onclick = () => {
 $('file').onchange = async event => {
   const file=event.target.files[0];event.target.value='';if(!file || !model)return;
   const ticket=++revision;
+  drawing=false;
   let url;
   try {
     if(file.size>10*1024*1024) throw Error('Choose an image smaller than 10 MB.');
