@@ -1,4 +1,5 @@
 import {probabilities} from './model.mjs';
+import {prepareUpload} from './upload.mjs';
 const $ = id => document.getElementById(id);
 const pad = $('pad'), ctx = pad.getContext('2d', {willReadFrequently:true});
 const side = pad.width;
@@ -99,25 +100,7 @@ $('file').onchange = async event => {
     temp.height=Math.max(1,Math.round(image.height*scale));
     const t=temp.getContext('2d');t.drawImage(image,0,0,temp.width,temp.height);
     const bitmap=t.getImageData(0,0,temp.width,temp.height), data=bitmap.data;
-    const border=[],visible=[];
-    for(let i=0;i<data.length;i+=4){
-      const value=Math.round(.299*data[i]+.587*data[i+1]+.114*data[i+2]);
-      data[i]=value;
-      if(data[i+3]<128)continue;
-      visible.push(value);
-      const x=(i/4)%temp.width,y=Math.floor(i/4/temp.width);
-      if(!x||!y||x===temp.width-1||y===temp.height-1)border.push(value);
-    }
-    const median=a=>a.sort((x,y)=>x-y)[Math.floor(a.length/2)];
-    const transparent=border.length<(temp.width+temp.height)/2;
-    const dark=transparent?median(visible)<128:median(border)>=128;
-    let low=255,high=0;
-    for(let i=0;i<data.length;i+=4){
-      const ink=(dark?255-data[i]:data[i])*data[i+3]/255;
-      low=Math.min(low,ink);high=Math.max(high,ink);
-      data[i]=inkColor[0];data[i+1]=inkColor[1];data[i+2]=inkColor[2];data[i+3]=ink;
-    }
-    if(high-low<8)throw Error('Choose an image with a visible digit.');
+    prepareUpload(data, temp.width, temp.height, inkColor);
     t.putImageData(bitmap,0,0);ctx.clearRect(0,0,side,side);
     ctx.drawImage(temp,(side-temp.width)/2,(side-temp.height)/2);
     replace=true;selectSample('');analyze('Uploaded image analyzed');
