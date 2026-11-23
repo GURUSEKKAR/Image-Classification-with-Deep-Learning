@@ -9,6 +9,9 @@ from torch import nn
 from torch.nn.utils.fusion import fuse_conv_bn_eval
 
 
+CHECKPOINT_VERSION = 1
+
+
 def conv_block(in_channels, out_channels):
     return nn.Sequential(
         nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
@@ -46,6 +49,8 @@ def load_checkpoint(path):
     required = {"weights", "mean", "std", "split_indices", "dataset_sha256", "best_epoch", "config"}
     if not isinstance(checkpoint, dict) or not required.issubset(checkpoint):
         raise ValueError(f"{path} is missing required digit classifier fields.")
+    if checkpoint.get("format_version", 1) != CHECKPOINT_VERSION:
+        raise ValueError("Unsupported digit classifier checkpoint version.")
     for field in ("mean", "std"):
         value = checkpoint[field]
         if type(value) not in (int, float) or not isfinite(value):

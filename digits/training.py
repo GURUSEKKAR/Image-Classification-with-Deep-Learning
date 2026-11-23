@@ -12,7 +12,7 @@ import torch
 from torch.nn import functional as F
 
 from .data import augment, dataset, split_indices
-from .model import DigitCNN
+from .model import CHECKPOINT_VERSION, DigitCNN
 
 
 def train_step(model, optimizer, images, labels, mean, std):
@@ -80,6 +80,7 @@ def train(args):
             break
 
     checkpoint = {
+        "format_version": CHECKPOINT_VERSION,
         "weights": best_weights, "mean": mean, "std": std, "split_indices": splits,
         "dataset_sha256": fingerprint, "best_epoch": best_epoch, "history": history,
         "config": {"seed": args.seed, "epochs": args.epochs, "patience": args.patience,
