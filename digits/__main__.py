@@ -16,7 +16,8 @@ def positive_int(value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train and use a handwritten-digit CNN on CPU.")
+    parser = argparse.ArgumentParser(prog="python -m digits",
+                                     description="Train and use a handwritten-digit CNN on CPU.")
     commands = parser.add_subparsers(dest="command", required=True)
     fit = commands.add_parser("train", help="train a model and save its best validation epoch")
     fit.add_argument("--epochs", type=positive_int, default=100)
@@ -47,7 +48,6 @@ def main():
 
     for command in (score, perf, infer):
         command.add_argument("--checkpoint", type=Path, default=CHECKPOINT)
-    for command in (score, perf, infer):
         command.add_argument("--json", type=Path, help="write the report to a file or - for stdout")
     for command in (fit, score, perf, infer):
         command.add_argument("--threads", type=positive_int, default=1, help="CPU threads (default 1)")
@@ -61,12 +61,14 @@ def main():
         parser.error("--seed must be between 0 and 2^63 - 1")
     if args.command == "train" and (not isfinite(args.learning_rate) or args.learning_rate <= 0):
         parser.error("--learning-rate must be finite and positive")
-    import torch
-
-    torch.set_num_threads(args.threads)
-    run = getattr(import_module(f".{args.module}", __package__), args.command)
     try:
+        import torch
+
+        torch.set_num_threads(args.threads)
+        run = getattr(import_module(f".{args.module}", __package__), args.command)
         run(args)
+    except ModuleNotFoundError as error:
+        parser.exit(1, f"Missing module {error.name}. Run python -m pip install -r requirements.txt\n")
     except (OSError, ValueError) as error:
         parser.exit(1, f"{parser.prog}: {error}\n")
 
