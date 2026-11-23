@@ -19,6 +19,16 @@ The sample is image 492 in the dataset. The command predicts **6** and prints th
 
 ## Training and evaluation
 
+### Predict a batch of images
+
+For a mix of light and dark backgrounds, use `--auto-ink`. Use `--trim` if there is empty space around a digit. Each input file should contain one digit. The JSON output preserves the order of the files and includes the predicted digit and its ranked probabilities.
+
+```sh
+python -m digits predict examples/*.png --auto-ink --top-k 3 --json runs/predictions.json
+```
+
+### Reproduce the reference run
+
 ```sh
 python -m digits train --output runs/retrained.pt
 python -m digits evaluate --checkpoint runs/retrained.pt --split validation
@@ -27,6 +37,8 @@ python -m digits benchmark --checkpoint runs/retrained.pt --json runs/benchmark.
 ```
 
 The commands use one CPU thread by default. Each accepts `--help` for options. Evaluation, prediction, and benchmarking load the included [checkpoint](artifacts/digits.pt) by default.
+
+Training saves each new best epoch atomically. If training stops midway, the last saved improvement is available for inference. Use a separate `--output` path for each experiment. To compare learning rates, pass `--learning-rate` and keep the seed fixed. Evaluation reports list each error's dataset index, actual digit, predicted digit, and probability assigned to the prediction. Pass `--json -` to stream a report into another program.
 
 ### Data and model
 
@@ -55,3 +67,11 @@ Training stopped at epoch 52 and selected epoch 42. The checkpoint includes its 
 These measurements used Python 3.13.12 and PyTorch 2.15.0 on an arm64 Mac with one PyTorch CPU thread. The benchmark runs 10 warm-up iterations and 200 timed iterations per configuration. Training measures in-memory batches through augmentation, normalization, forward pass, backward pass, and optimizer update.
 
 For inference, the predictor folds each batch normalization layer into its preceding convolution and runs under `torch.inference_mode()`. The latency figures time one forward pass on an already-normalized image with the model in memory. The benchmark checks the fused model's class choices and scores against the original on 64 images before timing. [Benchmark report](artifacts/benchmark.json)
+
+## Run the checks
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+The suite checks partition integrity, image preprocessing, deterministic training, interrupted writes, early stopping, checkpoint compatibility, command-line prediction, evaluation totals, and benchmark output. A full retraining run with seed 42 on the reference environment reproduced every tensor in the shipped model.
