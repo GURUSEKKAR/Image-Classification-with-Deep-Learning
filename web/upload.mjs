@@ -10,7 +10,8 @@ export function prepareUpload(data, width, height, color) {
     if (!x || !y || x === width-1 || y === height-1) border.push(value);
   }
   const median = values => values.sort((a,b) => a-b)[Math.floor(values.length/2)];
-  const transparent = border.length < (width+height)/2;
+  const perimeter = width * height - Math.max(0, width-2) * Math.max(0, height-2);
+  const transparent = border.length < perimeter / 2;
   const background = transparent ? 0 : median(border);
   const dark = transparent ? median(visible) < 128 : background >= 128;
   let low = 255, high = 0;
