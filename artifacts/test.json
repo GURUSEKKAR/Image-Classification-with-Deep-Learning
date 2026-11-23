@@ -5,6 +5,8 @@
   "accuracy": 0.9962825278810409,
   "macro_f1": 0.996295025728988,
   "loss": 0.010623078793287277,
+  "dataset_sha256": "87ff0c9e40dc7e2c0e34e7257799c2e3f3aec1a016363bb11cad869ec428a826",
+  "training_seed": 42,
   "best_epoch": 42,
   "classes": [
     0,
@@ -17,6 +19,14 @@
     7,
     8,
     9
+  ],
+  "errors": [
+    {
+      "dataset_index": 1242,
+      "actual": 1,
+      "predicted": 7,
+      "probability": 0.4579469859600067
+    }
   ],
   "confusion_matrix": [
     [

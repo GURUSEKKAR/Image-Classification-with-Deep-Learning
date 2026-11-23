@@ -4,7 +4,9 @@
   "correct": 269,
   "accuracy": 1.0,
   "macro_f1": 1.0,
-  "loss": 0.0031284759752452374,
+  "loss": 0.0031284764409065247,
+  "dataset_sha256": "87ff0c9e40dc7e2c0e34e7257799c2e3f3aec1a016363bb11cad869ec428a826",
+  "training_seed": 42,
   "best_epoch": 42,
   "classes": [
     0,
@@ -18,6 +20,7 @@
     8,
     9
   ],
+  "errors": [],
   "confusion_matrix": [
     [
       27,
