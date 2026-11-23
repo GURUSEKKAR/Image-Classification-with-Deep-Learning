@@ -38,11 +38,21 @@ def evaluate(args):
         actual, predicted, labels=classes, zero_division=0
     )
     correct = int(np.sum(predicted == actual))
+    probabilities = logits.softmax(1)
+    indices = checkpoint["split_indices"][args.split]
     result = {
         "split": args.split, "samples": len(labels), "correct": correct,
         "accuracy": correct / len(labels), "macro_f1": float(f1.mean()),
         "loss": F.cross_entropy(logits, labels).item(), "best_epoch": checkpoint["best_epoch"],
         "classes": classes.tolist(),
+        "errors": [
+            {
+                "dataset_index": indices[i], "actual": int(actual[i]),
+                "predicted": int(predicted[i]),
+                "probability": probabilities[i, predicted[i]].item(),
+            }
+            for i in np.flatnonzero(predicted != actual)
+        ],
         "confusion_matrix": confusion_matrix(actual, predicted, labels=classes).tolist(),
         "per_class": [
             dict(digit=int(i), precision=float(precision[i]), recall=float(recall[i]),
