@@ -23,4 +23,7 @@ export function prepareUpload(data, width, height, color) {
     data[i] = color[0]; data[i+1] = color[1]; data[i+2] = color[2]; data[i+3] = ink;
   }
   if (high-low < 8) throw Error('Choose an image with a visible digit.');
+  for (let i = 3; i < data.length; i += 4) {
+    data[i] = Math.round(255 * (data[i] - low) / (high - low));
+  }
 }
