@@ -66,13 +66,17 @@ def image_tensor(path: Path, dark_ink: bool = False, *, auto_ink=False, trim=Fal
         gray = Image.alpha_composite(Image.new("RGBA", rgba.size, background), rgba).convert("L")
     if dark_ink:
         gray = ImageOps.invert(gray)
+    low, high = gray.getextrema()
+    if low == high:
+        raise ValueError(f"No visible digit contrast in {path}.")
     if trim:
-        low, high = gray.getextrema()
         threshold = low + 0.12 * (high - low)
         bounds = gray.point(lambda pixel: 255 if pixel > threshold else 0).getbbox()
         if bounds:
             gray = gray.crop(bounds)
     tile = ImageOps.pad(gray, (8, 8), method=Image.Resampling.LANCZOS, color=0)
+    if tile.getextrema()[0] == tile.getextrema()[1]:
+        raise ValueError(f"No visible digit after resizing {path}. Try a closer crop.")
     pixels = np.asarray(tile, dtype=np.float32) / 255.0
     return torch.from_numpy(pixels)[None, None]
 
