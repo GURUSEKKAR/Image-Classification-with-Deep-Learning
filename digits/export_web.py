@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .data import dataset
+from .data import dataset, validate_splits
 from .model import inference_model, load_checkpoint
 
 
@@ -19,8 +19,11 @@ def main():
     if digest != checkpoint["dataset_sha256"]:
         raise ValueError("Dataset differs from the checkpoint.")
     samples = {}
+    validate_splits(checkpoint["split_indices"], len(labels))
     for idx in checkpoint["split_indices"]["test"]:
         samples.setdefault(str(labels[idx]), images[idx].flatten().tolist())
+    if len(samples) != 10:
+        raise ValueError("The sample split must include all ten digits.")
     payload = {"layers": [{"w": layer.weight.flatten().tolist(), "b": layer.bias.tolist()}
                           for layer in layers],
                "mean": checkpoint["mean"], "std": checkpoint["std"], "samples": samples}
