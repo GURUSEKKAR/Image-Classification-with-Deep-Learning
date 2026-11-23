@@ -40,7 +40,7 @@ def train(args):
     val_x = (torch.from_numpy(images[splits["validation"]]) - mean) / std
     val_y = torch.from_numpy(labels[splits["validation"]])
     model = DigitCNN()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=0.002, weight_decay=0.01)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=0.01)
     schedule = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, factor=0.5, patience=3)
     history = []
     best_loss = float("inf")
@@ -54,6 +54,7 @@ def train(args):
         "history": history,
         "config": {
             "seed": args.seed, "epochs": args.epochs, "patience": args.patience,
+            "learning_rate": args.learning_rate,
             "batch_size": args.batch_size, "threads": torch.get_num_threads(),
         },
         "environment": {

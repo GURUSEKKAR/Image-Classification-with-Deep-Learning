@@ -2,6 +2,7 @@
 
 import argparse
 from importlib import import_module
+from math import isfinite
 from pathlib import Path
 
 CHECKPOINT = Path("artifacts/digits.pt")
@@ -22,6 +23,7 @@ def main():
     fit.add_argument("--patience", type=positive_int, default=10)
     fit.add_argument("--batch-size", type=positive_int, default=64)
     fit.add_argument("--seed", type=int, default=42)
+    fit.add_argument("--learning-rate", type=float, default=0.002)
     fit.add_argument("--output", type=Path, default=CHECKPOINT)
     fit.set_defaults(module="training")
 
@@ -55,6 +57,8 @@ def main():
             parser.error("the JSON destination must be different from each input file")
     if args.command == "train" and not 0 <= args.seed < 2**63:
         parser.error("--seed must be between 0 and 2^63 - 1")
+    if args.command == "train" and (not isfinite(args.learning_rate) or args.learning_rate <= 0):
+        parser.error("--learning-rate must be finite and positive")
     import torch
 
     torch.set_num_threads(args.threads)

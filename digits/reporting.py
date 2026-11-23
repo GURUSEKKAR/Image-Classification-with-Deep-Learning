@@ -58,7 +58,8 @@ def training_rate(model, images, labels, checkpoint, batch_size, repeats, warmup
     """Time full optimizer updates on private copies with the same image stream."""
     torch.manual_seed(checkpoint["config"]["seed"])
     working = deepcopy(model).train()
-    optimizer = torch.optim.AdamW(working.parameters(), lr=0.002, weight_decay=0.01)
+    learning_rate = checkpoint["config"].get("learning_rate", 0.002)
+    optimizer = torch.optim.AdamW(working.parameters(), lr=learning_rate, weight_decay=0.01)
     for step in range(warmup + repeats):
         start = (step * batch_size) % len(images)
         indices = torch.arange(start, start + batch_size) % len(images)
