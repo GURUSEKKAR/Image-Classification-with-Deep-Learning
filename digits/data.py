@@ -45,10 +45,23 @@ def validate_splits(parts, size):
         raise ValueError("Saved partitions must cover every dataset image exactly once.")
 
 
-def image_tensor(path: Path, dark_ink: bool):
+def has_dark_ink(rgba):
+    gray = np.asarray(rgba.convert("L"))
+    alpha = np.asarray(rgba.getchannel("A"))
+    border_alpha = np.concatenate((alpha[0], alpha[-1], alpha[:, 0], alpha[:, -1]))
+    if np.median(border_alpha) < 128:
+        visible = gray[alpha >= 128]
+        return bool(visible.size and np.median(visible) < 128)
+    border = np.concatenate((gray[0], gray[-1], gray[:, 0], gray[:, -1]))
+    return bool(np.median(border[border_alpha >= 128]) >= 128)
+
+
+def image_tensor(path: Path, dark_ink: bool = False, *, auto_ink=False):
     """Fit one cropped digit inside an 8×8 square, preserving its aspect ratio."""
     with Image.open(path) as source:
         rgba = ImageOps.exif_transpose(source).convert("RGBA")
+        if auto_ink:
+            dark_ink = has_dark_ink(rgba)
         background = "white" if dark_ink else "black"
         gray = Image.alpha_composite(Image.new("RGBA", rgba.size, background), rgba).convert("L")
     if dark_ink:

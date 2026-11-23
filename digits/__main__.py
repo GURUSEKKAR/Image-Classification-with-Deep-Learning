@@ -24,7 +24,7 @@ def positive_int(value):
 @torch.inference_mode()
 def predict(args):
     model, checkpoint = load_checkpoint(args.checkpoint)
-    image = image_tensor(args.image, args.dark_ink)
+    image = image_tensor(args.image, args.dark_ink, auto_ink=args.auto_ink)
     logits = inference_model(model)((image - checkpoint["mean"]) / checkpoint["std"])
     values, classes = logits[0].softmax(dim=0).topk(3)
     print(f"Predicted digit {classes[0].item()}")
@@ -51,7 +51,9 @@ def main():
     perf.set_defaults(run=benchmark)
     infer = commands.add_parser("predict", help="classify an image file")
     infer.add_argument("image", type=Path)
-    infer.add_argument("--dark-ink", action="store_true", help="use for dark strokes on light paper")
+    ink = infer.add_mutually_exclusive_group()
+    ink.add_argument("--dark-ink", action="store_true", help="use for dark strokes on light paper")
+    ink.add_argument("--auto-ink", action="store_true", help="infer polarity from the background")
     infer.set_defaults(run=predict)
 
     for command in (score, perf, infer):
