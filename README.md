@@ -85,3 +85,25 @@ The browser app in `web/` includes the trained model, a touch-enabled drawing ca
 **Static hosting** — connect this repository to a static host, leave the build command empty, and set the publish directory to `web`. For a manual deployment, upload the contents of `web/` together. The entry point is `index.html`. The files use relative URLs and can also be served under a subdirectory.
 
 **Updating the model** — after retraining, run `python -m digits.export_web --checkpoint runs/retrained.pt` and redeploy the updated `web/model.json`. The displayed accuracy describes the included checkpoint. Reevaluate replacement weights and update the displayed metric before publishing them.
+
+### Checking browser accuracy
+
+The upload path estimates the paper color at the image border, extracts the stroke and stretches its contrast. To measure the effect, the following experiment renders all 269 validation digits on each of three synthetic backgrounds. Both versions receive the same known crop. This isolates grayscale conversion from image decoding, cropping and resizing.
+
+| Paper / ink intensity (0–255) | Original conversion | Updated conversion |
+| --- | ---: | ---: |
+| White / black (255 / 0) | 269 / 269 | 269 / 269 |
+| Light gray / darker pencil (205 / 165) | 51 / 269 | 269 / 269 |
+| Dark gray / lighter ink (55 / 95) | 49 / 269 | 269 / 269 |
+
+These figures apply to the simulated contrast conditions. Accuracy on camera photos and independent writers remains unmeasured. The original test split still scores 268 / 269.
+
+With the Python dependencies installed and Node.js available, run the following from the repository root.
+
+```sh
+python -m scripts.check_upload_accuracy
+node --test tests/*.test.mjs
+python -m unittest discover -s tests -v
+```
+
+The Python suite compares the shipped JavaScript model's probabilities with PyTorch on every held-out test digit when Node.js is available.
