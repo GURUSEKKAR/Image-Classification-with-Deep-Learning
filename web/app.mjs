@@ -3,7 +3,18 @@ const $ = id => document.getElementById(id);
 const pad = $('pad'), ctx = pad.getContext('2d', {willReadFrequently:true});
 const side = pad.width;
 let model, drawing = false, replace = true, revision = 0;
+const inkColor = [37, 66, 143];
+function renderPixels(canvas, pixels, grayscale = false) {
+  const context = canvas.getContext('2d');
+  context.clearRect(0, 0, 8, 8);
+  pixels.forEach((value, index) => {
+    const shade = Math.round(value * 255);
+    context.fillStyle = grayscale ? `rgb(${shade},${shade},${shade})` : `rgba(${inkColor},${value})`;
+    context.fillRect(index % 8, Math.floor(index / 8), 1, 1);
+  });
+}
 function resetResult(message) {
+  $('input-preview').getContext('2d').clearRect(0, 0, 8, 8);
   $('digit').textContent = '–';
   $('ranks').replaceChildren();
   $('status').textContent = message;
@@ -14,6 +25,7 @@ function selectSample(key) {
 }
 function score(pixels, message) {
   if (!model) return;
+  renderPixels($('input-preview'), pixels, true);
   const ranks = probabilities(pixels, model).map((p,d) => ({p,d})).sort((a,b) => b.p-a.p);
   $('digit').textContent = ranks[0].d;
   $('status').textContent = message;
@@ -32,7 +44,7 @@ function showSample(key) {
   ++revision; replace = true; selectSample(key);
   ctx.clearRect(0,0,side,side);
   model.samples[key].forEach((v,i) => {
-    ctx.fillStyle = 'rgba(219,245,179,'+v+')';
+    ctx.fillStyle = `rgba(${inkColor},${v})`;
     ctx.fillRect(48+(i%8)*24,48+Math.floor(i/8)*24,24,24);
   });
   score(model.samples[key], 'Sample '+key+' analyzed');
@@ -61,7 +73,7 @@ pad.onpointerdown = event => {
   if(!model || !event.isPrimary || event.button!==0) return;
   ++revision; selectSample(''); if(replace) ctx.clearRect(0,0,side,side);
   replace=false;drawing=true;pad.setPointerCapture(event.pointerId);
-  ctx.strokeStyle='#dbf5b3';ctx.lineWidth=22;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.strokeStyle=`rgb(${inkColor})`;ctx.lineWidth=22;ctx.lineCap='round';ctx.lineJoin='round';
   const [x,y]=point(event);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.01,y);ctx.stroke();
 };
 pad.onpointermove = event => {
@@ -103,7 +115,7 @@ $('file').onchange = async event => {
     for(let i=0;i<data.length;i+=4){
       const ink=(dark?255-data[i]:data[i])*data[i+3]/255;
       low=Math.min(low,ink);high=Math.max(high,ink);
-      data[i]=219;data[i+1]=245;data[i+2]=179;data[i+3]=ink;
+      data[i]=inkColor[0];data[i+1]=inkColor[1];data[i+2]=inkColor[2];data[i+3]=ink;
     }
     if(high-low<8)throw Error('Choose an image with a visible digit.');
     t.putImageData(bitmap,0,0);ctx.clearRect(0,0,side,side);
@@ -117,6 +129,11 @@ try {
   model=await response.json();
   for(const key of Object.keys(model.samples)){
     const button=document.createElement('button');button.textContent=key;
+    const thumb = document.createElement('canvas');
+    thumb.width = thumb.height = 8;
+    thumb.setAttribute('aria-hidden', 'true');
+    renderPixels(thumb, model.samples[key]);
+    button.prepend(thumb);
     button.setAttribute('aria-label','Load sample '+key);button.onclick=()=>showSample(key);
     $('samples').append(button);
   }
