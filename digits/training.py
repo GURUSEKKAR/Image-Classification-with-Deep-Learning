@@ -3,6 +3,7 @@
 import platform
 from copy import deepcopy
 from importlib.metadata import version
+from math import isfinite
 from pathlib import Path
 from time import perf_counter
 
@@ -35,6 +36,8 @@ def train(args):
     splits = split_indices(labels, args.seed)
     train_x = images[splits["train"]]
     mean, std = float(train_x.mean()), float(train_x.std())
+    if not isfinite(mean) or not isfinite(std) or std <= 0:
+        raise ValueError("Training pixels must have finite values and positive variance.")
     train_x = torch.from_numpy(train_x)
     train_y = torch.from_numpy(labels[splits["train"]])
     val_x = (torch.from_numpy(images[splits["validation"]]) - mean) / std
@@ -76,6 +79,8 @@ def train(args):
             logits = model(val_x)
             val_loss = F.cross_entropy(logits, val_y).item()
             correct = (logits.argmax(1) == val_y).sum().item()
+        if not isfinite(total_loss) or not isfinite(val_loss):
+            raise ValueError(f"Non-finite loss at epoch {epoch}. Check the learning rate and data.")
         accuracy = correct / len(val_y)
         history.append(dict(epoch=epoch, train_loss=total_loss / len(train_x),
                             validation_loss=val_loss, validation_accuracy=accuracy,
