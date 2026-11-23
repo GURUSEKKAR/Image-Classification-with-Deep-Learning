@@ -79,7 +79,13 @@ pad.onpointerdown = event => {
   const [x,y]=point(event);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.01,y);ctx.stroke();
 };
 pad.onpointermove = event => {
-  if(drawing && event.isPrimary){ctx.lineTo(...point(event));ctx.stroke();}
+  if(drawing && event.isPrimary){
+    const [x,y] = point(event);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+  }
 };
 pad.onpointerup = pad.onpointercancel = pad.onlostpointercapture = event => {
   if(drawing && event.isPrimary){drawing=false;analyze('Drawing analyzed');}
