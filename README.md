@@ -48,9 +48,9 @@ Training stopped at epoch 52 and selected epoch 42. The checkpoint includes its 
 
 | Measurement | Reference | Optimized |
 | --- | ---: | ---: |
-| Training throughput | 3,414 images/s at batch size 1 | 34,588 images/s at batch size 64 |
-| Single-image forward pass, median | 0.0474 ms | 0.0412 ms |
-| Single-image forward pass, 95th percentile | 0.0529 ms | 0.0465 ms |
+| Training throughput | 3,409 images/s at batch size 1 | 34,444 images/s at batch size 64 |
+| Single-image forward pass, median | 0.0455 ms | 0.0386 ms |
+| Single-image forward pass, 95th percentile | 0.0501 ms | 0.0439 ms |
 
 These measurements used Python 3.13.12 and PyTorch 2.15.0 on an arm64 Mac with one PyTorch CPU thread. The benchmark runs 10 warm-up iterations and 200 timed iterations per configuration. Training measures in-memory batches through augmentation, normalization, forward pass, backward pass, and optimizer update.
 

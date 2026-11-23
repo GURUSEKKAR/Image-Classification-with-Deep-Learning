@@ -2,6 +2,10 @@
   "device": "cpu",
   "architecture": "arm64",
   "system": "Darwin",
+  "python": "3.13.12",
+  "dataset_sha256": "87ff0c9e40dc7e2c0e34e7257799c2e3f3aec1a016363bb11cad869ec428a826",
+  "training_seed": 42,
+  "best_epoch": 42,
   "torch": "2.15.0",
   "threads": 1,
   "warmup_iterations": 10,
@@ -9,17 +13,17 @@
   "fusion_check_samples": 64,
   "max_probability_difference": 4.76837158203125e-07,
   "training_images_per_second_by_batch_size": {
-    "1": 3413.8455222661664,
-    "64": 34587.85613384475
+    "1": 3409.1248276246893,
+    "64": 34444.07241622794
   },
   "single_image_forward_ms": {
     "original": {
-      "p50": 0.04735450784210116,
-      "p95": 0.05287499516271055
+      "p50": 0.04552101017907262,
+      "p95": 0.05012912588426843
     },
     "fused": {
-      "p50": 0.041167004383169115,
-      "p95": 0.04645899753086269
+      "p50": 0.03856200783047825,
+      "p95": 0.04387501394376159
     }
   }
 }
