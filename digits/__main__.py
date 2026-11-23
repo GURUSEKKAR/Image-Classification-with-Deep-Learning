@@ -1,16 +1,8 @@
 """Run with python -m digits."""
 
 import argparse
+from importlib import import_module
 from pathlib import Path
-
-import torch
-
-from .data import image_tensor
-from .model import inference_model, load_checkpoint
-from .io import report
-from .reporting import benchmark, evaluate
-from .training import train
-
 
 CHECKPOINT = Path("artifacts/digits.pt")
 
@@ -22,35 +14,6 @@ def positive_int(value):
     return number
 
 
-@torch.inference_mode()
-def predict(args):
-    model, checkpoint = load_checkpoint(args.checkpoint)
-    model = inference_model(model)
-    predictions = []
-    for start in range(0, len(args.images), 64):
-        paths = args.images[start : start + 64]
-        images = torch.cat([
-            image_tensor(path, args.dark_ink, auto_ink=args.auto_ink, trim=args.trim)
-            for path in paths
-        ])
-        logits = model((images - checkpoint["mean"]) / checkpoint["std"])
-        values, classes = logits.softmax(dim=1).topk(args.top_k)
-        for path, digits, scores in zip(paths, classes.tolist(), values.tolist()):
-            if args.json:
-                predictions.append({
-                    "image": str(path), "digit": digits[0],
-                    "scores": [{"digit": d, "probability": s} for d, s in zip(digits, scores)],
-                })
-                continue
-            if len(args.images) > 1:
-                print(path)
-            print(f"Predicted digit {digits[0]}")
-            for digit, score in zip(digits, scores):
-                print(f"  {digit}   {score:.2%}")
-    if args.json:
-        report({"predictions": predictions}, args.json)
-
-
 def main():
     parser = argparse.ArgumentParser(description="Train and use a handwritten-digit CNN on CPU.")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -60,14 +23,14 @@ def main():
     fit.add_argument("--batch-size", type=positive_int, default=64)
     fit.add_argument("--seed", type=int, default=42)
     fit.add_argument("--output", type=Path, default=CHECKPOINT)
-    fit.set_defaults(run=train)
+    fit.set_defaults(module="training")
 
     score = commands.add_parser("evaluate", help="report accuracy and class-level metrics")
     score.add_argument("--split", choices=("validation", "test"), default="test")
-    score.set_defaults(run=evaluate)
+    score.set_defaults(module="reporting")
     perf = commands.add_parser("benchmark", help="measure training throughput and prediction latency")
     perf.add_argument("--repeats", type=positive_int, default=200)
-    perf.set_defaults(run=benchmark)
+    perf.set_defaults(module="reporting")
     infer = commands.add_parser("predict", help="classify an image file")
     infer.add_argument("images", type=Path, nargs="+", metavar="IMAGE")
     infer.add_argument("--top-k", type=int, choices=range(1, 11), default=3, metavar="1..10",
@@ -76,7 +39,7 @@ def main():
     ink.add_argument("--dark-ink", action="store_true", help="use for dark strokes on light paper")
     ink.add_argument("--auto-ink", action="store_true", help="infer polarity from the background")
     infer.add_argument("--trim", action="store_true", help="crop surrounding margins to the digit")
-    infer.set_defaults(run=predict)
+    infer.set_defaults(module="prediction")
 
     for command in (score, perf, infer):
         command.add_argument("--checkpoint", type=Path, default=CHECKPOINT)
@@ -92,9 +55,12 @@ def main():
             parser.error("the JSON destination must be different from each input file")
     if args.command == "train" and not 0 <= args.seed < 2**63:
         parser.error("--seed must be between 0 and 2^63 - 1")
+    import torch
+
     torch.set_num_threads(args.threads)
+    run = getattr(import_module(f".{args.module}", __package__), args.command)
     try:
-        args.run(args)
+        run(args)
     except (OSError, ValueError) as error:
         parser.exit(1, f"{parser.prog}: {error}\n")
 

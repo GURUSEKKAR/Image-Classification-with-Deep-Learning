@@ -6,11 +6,12 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image, ImageOps
-from sklearn.datasets import load_digits
 from torch.nn import functional as F
 
 
 def dataset():
+    from sklearn.datasets import load_digits
+
     raw = load_digits()
     pixels = np.ascontiguousarray(raw.images, dtype=np.uint8)
     labels = np.ascontiguousarray(raw.target, dtype=np.uint8)
