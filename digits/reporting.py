@@ -16,6 +16,14 @@ from .model import inference_model, load_checkpoint
 from .training import train_step
 
 
+def run_identity(checkpoint):
+    return {
+        "dataset_sha256": checkpoint["dataset_sha256"],
+        "training_seed": checkpoint["config"]["seed"],
+        "best_epoch": checkpoint["best_epoch"],
+    }
+
+
 def split_tensors(checkpoint, split):
     images, labels, fingerprint = dataset()
     if fingerprint != checkpoint["dataset_sha256"]:
@@ -46,7 +54,7 @@ def evaluate(args):
     result = {
         "split": args.split, "samples": len(labels), "correct": correct,
         "accuracy": correct / len(labels), "macro_f1": float(f1.mean()),
-        "loss": F.cross_entropy(logits, labels).item(), "best_epoch": checkpoint["best_epoch"],
+        "loss": F.cross_entropy(logits, labels).item(), **run_identity(checkpoint),
         "classes": classes.tolist(),
         "errors": [
             {
@@ -113,6 +121,7 @@ def benchmark(args):
     }
     result = {
         "device": "cpu", "architecture": platform.machine(), "system": platform.system(),
+        "python": platform.python_version(), **run_identity(checkpoint),
         "torch": str(torch.__version__), "threads": torch.get_num_threads(),
         "warmup_iterations": warmup, "timed_iterations": args.repeats,
         "fusion_check_samples": len(check),
