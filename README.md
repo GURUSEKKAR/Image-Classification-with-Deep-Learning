@@ -75,3 +75,13 @@ python -m unittest discover -s tests -v
 ```
 
 The suite checks partition integrity, image preprocessing, deterministic training, interrupted writes, early stopping, checkpoint compatibility, command-line prediction, evaluation totals, and benchmark output. A full retraining run with seed 42 on the reference environment reproduced every tensor in the shipped model.
+
+## Deploy the web app
+
+The browser app in `web/` includes the trained model, a touch-enabled drawing canvas, local image upload, ten held-out samples, and ranked predictions. All inference runs on the visitor's device.
+
+**Local preview** — run `python3 -m http.server 8000 --directory web` from the repository root and open `http://localhost:8000`.
+
+**Static hosting** — connect this repository to a static host, leave the build command empty, and set the publish directory to `web`. For a manual deployment, upload the contents of `web/` together. The entry point is `index.html`. The files use relative URLs and can also be served under a subdirectory.
+
+**Updating the model** — after retraining, run `python -m digits.export_web --checkpoint runs/retrained.pt` and redeploy the updated `web/model.json`. The displayed accuracy describes the included checkpoint. Reevaluate replacement weights and update the displayed metric before publishing them.

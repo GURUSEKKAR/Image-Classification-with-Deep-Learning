@@ -1,0 +1,31 @@
+"""Rebuild the static browser model and example inputs from the trained checkpoint."""
+import argparse
+import json
+from pathlib import Path
+
+from .data import dataset
+from .model import inference_model, load_checkpoint
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--checkpoint", type=Path, default=Path("artifacts/digits.pt"))
+    parser.add_argument("--output", type=Path, default=Path("web/model.json"))
+    args = parser.parse_args()
+    model, checkpoint = load_checkpoint(args.checkpoint)
+    fused = inference_model(model)
+    layers = [fused.features[0][0], fused.features[1][0], fused.classifier[1], fused.classifier[4]]
+    images, labels, digest = dataset()
+    if digest != checkpoint["dataset_sha256"]:
+        raise ValueError("Dataset differs from the checkpoint.")
+    samples = {}
+    for idx in checkpoint["split_indices"]["test"]:
+        samples.setdefault(str(labels[idx]), images[idx].flatten().tolist())
+    payload = {"layers": [{"w": layer.weight.flatten().tolist(), "b": layer.bias.tolist()}
+                          for layer in layers],
+               "mean": checkpoint["mean"], "std": checkpoint["std"], "samples": samples}
+    args.output.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()

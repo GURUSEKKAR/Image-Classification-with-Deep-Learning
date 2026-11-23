@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#123b38"><title>Glyph Lab · Digit classifier</title><link rel="stylesheet" href="./style.css"></head>
+<body><header><div class="brand"><span class="mark" aria-hidden="true">▦</span> Glyph Lab</div><a href="https://github.com/GURUSEKKAR/Image-Classification-with-Deep-Learning">View source ↗</a></header>
+<main><p class="eyebrow">MACHINE LEARNING STUDIO</p><h1>Digit classifier<span>.</span></h1><p class="intro">Draw a digit, upload an image, or explore a sample to see how the model reads it.</p>
+<div class="workspace"><section class="input"><h2>Input canvas</h2><p id="hint">Draw a single digit from 0 to 9.</p>
+<div class="board"><canvas id="pad" width="288" height="288" aria-label="Digit drawing area"></canvas></div>
+<div class="actions"><button id="clear">Clear canvas</button><label class="upload">Upload image<input type="file" id="file" accept="image/png,image/jpeg,image/webp"></label></div>
+<div class="samples"><strong>Try a sample</strong><div id="samples"></div></div></section>
+<section class="results"><h2>Prediction</h2><p id="status" role="status">Loading model…</p><div class="reading"><strong id="digit">–</strong><span>Predicted digit</span></div><h3>Top predictions</h3><div id="ranks"></div><div class="model"><strong>Model details</strong><dl><div><dt>Architecture</dt><dd>PyTorch CNN</dd></div><div><dt>Input resolution</dt><dd>8 × 8 grayscale</dd></div><div><dt>Test accuracy</dt><dd>99.63%</dd></div></dl></div></section></div></main>
+<footer>Glyph Lab <span>Inference runs on your device</span></footer><script type="module" src="./app.mjs"></script></body></html>
