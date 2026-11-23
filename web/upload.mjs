@@ -11,10 +11,13 @@ export function prepareUpload(data, width, height, color) {
   }
   const median = values => values.sort((a,b) => a-b)[Math.floor(values.length/2)];
   const transparent = border.length < (width+height)/2;
-  const dark = transparent ? median(visible) < 128 : median(border) >= 128;
+  const background = transparent ? 0 : median(border);
+  const dark = transparent ? median(visible) < 128 : background >= 128;
   let low = 255, high = 0;
   for (let i = 0; i < data.length; i += 4) {
-    const ink = (dark ? 255-data[i] : data[i]) * data[i+3] / 255;
+    const contrast = transparent ? (dark ? 255-data[i] : data[i])
+                                 : Math.max(0, dark ? background-data[i] : data[i]-background);
+    const ink = contrast * data[i+3] / 255;
     low = Math.min(low, ink);
     high = Math.max(high, ink);
     data[i] = color[0]; data[i+1] = color[1]; data[i+2] = color[2]; data[i+3] = ink;
