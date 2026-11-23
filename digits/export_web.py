@@ -13,6 +13,8 @@ def main():
     parser.add_argument("--checkpoint", type=Path, default=Path("artifacts/digits.pt"))
     parser.add_argument("--output", type=Path, default=Path("web/model.json"))
     args = parser.parse_args()
+    if args.output.resolve() == args.checkpoint.resolve():
+        parser.error("model output must differ from the source checkpoint")
     model, checkpoint = load_checkpoint(args.checkpoint)
     fused = inference_model(model)
     layers = [fused.features[0][0], fused.features[1][0], fused.classifier[1], fused.classifier[4]]
