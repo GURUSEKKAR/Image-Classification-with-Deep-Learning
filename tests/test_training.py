@@ -34,6 +34,13 @@ class TrainingTests(unittest.TestCase):
         for key in first["weights"]:
             self.assertTrue(torch.equal(first["weights"][key], second["weights"][key]), key)
 
+    def test_plateau_stops_exactly_after_patience(self):
+        self.config.epochs = 8
+        with patch.object(training, "train_step", return_value=torch.tensor(1.0)):
+            checkpoint = self.fit()
+        self.assertEqual(checkpoint["best_epoch"], 1)
+        self.assertEqual(len(checkpoint["history"]), 1 + self.config.patience)
+
     def test_interruption_leaves_a_loadable_best_checkpoint(self):
         original = training.train_step
         def interrupt_after_first_checkpoint(*args):

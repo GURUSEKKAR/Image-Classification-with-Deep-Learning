@@ -40,6 +40,10 @@ class CheckpointTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "decode"):
                 load_checkpoint(path)
 
+    def test_evaluation_requires_the_original_dataset(self):
+        with self.assertRaisesRegex(ValueError, "contents differ"):
+            split_tensors({**self.checkpoint, "dataset_sha256": "different"}, "test")
+
     def test_atomic_write_failure_preserves_existing_file(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / "result"
