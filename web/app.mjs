@@ -74,6 +74,7 @@ pad.onpointerdown = event => {
   if(!model || !event.isPrimary || event.button!==0) return;
   ++revision; selectSample(''); if(replace) ctx.clearRect(0,0,side,side);
   replace=false;drawing=true;pad.setPointerCapture(event.pointerId);
+  resetResult('Drawing…');
   ctx.strokeStyle=`rgb(${inkColor})`;ctx.lineWidth=22;ctx.lineCap='round';ctx.lineJoin='round';
   const [x,y]=point(event);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+.01,y);ctx.stroke();
 };
