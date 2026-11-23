@@ -7,7 +7,8 @@ import torch
 
 from .data import image_tensor
 from .model import inference_model, load_checkpoint
-from .reporting import benchmark, evaluate, report
+from .io import report
+from .reporting import benchmark, evaluate
 from .training import train
 
 
@@ -80,12 +81,12 @@ def main():
     for command in (score, perf, infer):
         command.add_argument("--checkpoint", type=Path, default=CHECKPOINT)
     for command in (score, perf, infer):
-        command.add_argument("--json", type=Path, help="write the report to this file")
+        command.add_argument("--json", type=Path, help="write the report to a file or - for stdout")
     for command in (fit, score, perf, infer):
         command.add_argument("--threads", type=positive_int, default=1, help="CPU threads (default 1)")
     args = parser.parse_args()
     output = getattr(args, "json", None)
-    if output:
+    if output and str(output) != "-":
         inputs = [args.checkpoint, *getattr(args, "images", [])]
         if any(path.resolve() == output.resolve() for path in inputs):
             parser.error("the JSON destination must be different from each input file")

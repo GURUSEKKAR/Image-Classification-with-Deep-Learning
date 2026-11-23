@@ -1,7 +1,7 @@
 """Evaluation on the saved split and CPU performance measurements."""
 
-import json
 import platform
+import sys
 from copy import deepcopy
 from time import perf_counter
 
@@ -11,7 +11,7 @@ from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from torch.nn import functional as F
 
 from .data import dataset, validate_splits
-from .io import atomic_output
+from .io import report
 from .model import inference_model, load_checkpoint
 from .training import train_step
 
@@ -23,16 +23,6 @@ def split_tensors(checkpoint, split):
     validate_splits(checkpoint["split_indices"], len(labels))
     indices = checkpoint["split_indices"][split]
     return torch.from_numpy(images[indices]), torch.from_numpy(labels[indices])
-
-
-def report(result, path):
-    output = json.dumps(result, indent=2, allow_nan=False)
-    if path:
-        with atomic_output(path) as pending:
-            pending.write_text(output + "\n", encoding="utf-8")
-        print(f"Wrote {path}")
-    else:
-        print(output)
 
 
 @torch.inference_mode()
@@ -60,7 +50,7 @@ def evaluate(args):
         ],
     }
     print(f"{args.split.capitalize()} accuracy {result['accuracy']:.2%} ({correct}/{len(labels)})  "
-          f"macro F1 {result['macro_f1']:.4f}")
+          f"macro F1 {result['macro_f1']:.4f}", file=sys.stderr)
     report(result, args.json)
 
 
