@@ -78,6 +78,8 @@ The suite checks partition integrity, image preprocessing, deterministic trainin
 
 ## Deploy the web app
 
+**Render** — open **New → Blueprint** in the Render dashboard, connect this repository, select `main`, and review the static site before deploying. The configuration runs the JavaScript tests and publishes `web/`. If you already connected a Render static site to this branch, deploy the latest commit from that service. [Render configuration](render.yaml)
+
 The browser app in `web/` includes the trained model, a touch-enabled drawing canvas, local image upload, ten held-out samples, and ranked predictions. All inference runs on the visitor's device.
 
 **Local preview** — run `python3 -m http.server 8000 --directory web` from the repository root and open `http://localhost:8000`.

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: guru-digit-classifier
+    runtime: static
+    branch: main
+    buildCommand: node --test tests/*.test.mjs
+    staticPublishPath: ./web
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
